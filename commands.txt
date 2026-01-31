@@ -1,0 +1,8 @@
+db.courses.insertOne({
+  title: "Getting Started with Databases",
+  createdAt: new Date()
+})
+
+db.slides.insertOne({
+  title: "Getting Started with Databases"
+})

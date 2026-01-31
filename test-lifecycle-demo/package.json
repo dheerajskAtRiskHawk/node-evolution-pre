@@ -1,0 +1,14 @@
+{
+  "name": "test-lifecycle-demo",
+  "version": "1.0.0",
+  "description": "Realistic task service with tests using AAA pattern and full lifecycle hooks",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "test": "node --test test/*.js"
+  },
+  "engines": {
+    "node": ">=24.0.0"
+  }
+}

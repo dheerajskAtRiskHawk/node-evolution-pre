@@ -1,0 +1,1 @@
+Hello from the permission demo. This file is read by the demo scripts when fs read is allowed.
