@@ -6,3 +6,17 @@ db.courses.insertOne({
 db.slides.insertOne({
   title: "Getting Started with Databases"
 })
+
+cd permission-model-demo
+
+# Normal — no restrictions
+node no-permission.mjs
+
+# With permission model, no allow → ERR_ACCESS_DENIED
+node --permission with-permission.mjs
+
+# With permission + allow read → works
+node --permission --allow-fs-read=. with-permission.mjs
+
+# Runtime check
+node --permission --allow-fs-read=. check-has.mjs
