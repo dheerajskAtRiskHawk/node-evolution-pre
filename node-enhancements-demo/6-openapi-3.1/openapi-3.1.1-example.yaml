@@ -1,0 +1,129 @@
+# OpenAPI 3.1.1 Example - All improvements applied
+# Released Oct 2024; patch over 3.1.0 (clarifications, no structural changes)
+
+openapi: 3.1.1
+info:
+  title: Sample API (3.1.1 style)
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+security: []   # No auth for this demo
+
+paths:
+  /users/{id}:
+    get:
+      summary: Get user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # 3.1.1: Full JSON Schema — nullable → type array
+  /search:
+    get:
+      summary: Search
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: ["string", "null"]   # ← Standard JSON Schema; no nullable workaround
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $schema: https://spec.openapis.org/oas/3.1/dialect/base
+                type: object
+                properties:
+                  score:
+                    type: number
+                    exclusiveMinimum: 0    # ← Direct value (was boolean!)
+                    exclusiveMaximum: 100
+                  os:
+                    type: string
+                    examples: [fedora, ubuntu]   # ← Multi-example support
+
+  # Paths unchanged — everything from 3.0 still works
+  /orders:
+    post:
+      summary: Create order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '201':
+          description: Created
+
+  # 3.1.1: Cleaner file upload (no format:binary hack)
+  /upload:
+    post:
+      summary: Upload file
+      requestBody:
+        content:
+          application/octet-stream:
+            schema: {}   # ← Empty schema; content-type defines binary (was format:binary)
+          image/png:
+            schema:
+              type: string
+              contentEncoding: base64
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  contentMediaType: application/octet-stream
+      responses:
+        '200':
+          description: Uploaded
+
+# 3.1.1 NEW: Native webhooks (first-class, not callbacks)
+webhooks:
+  orderShipped:
+    post:
+      summary: Webhook called when order ships
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ShipmentEvent'
+      responses:
+        '200':
+          description: Acknowledged
+
+components:
+  schemas:
+    User:
+      $schema: https://spec.openapis.org/oas/3.1/dialect/base
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: ["string", "null"]
+    Order:
+      type: object
+      properties:
+        productId:
+          type: integer
+    ShipmentEvent:
+      type: object
+      properties:
+        orderId:
+          type: integer
+        status:
+          type: string

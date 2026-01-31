@@ -1,0 +1,129 @@
+# OpenAPI 3.0 Example - Shows limitations addressed in 3.1.1
+# These patterns continue to WORK in 3.1.1 but have better alternatives
+
+openapi: 3.0.3
+info:
+  title: Sample API (3.0 style)
+  version: 1.0.0
+servers:
+  - url: https://api.example.com
+security: []
+
+paths:
+  /users/{id}:
+    get:
+      summary: Get user
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+
+  # 3.0 LIMITATION: nullable was a workaround (not standard JSON Schema)
+  /search:
+    get:
+      summary: Search
+      parameters:
+        - name: query
+          in: query
+          schema:
+            type: string
+            nullable: true   # ← OpenAPI-specific; replaced in 3.1
+      responses:
+        '200':
+          description: Search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  score:
+                    type: number
+                    minimum: 0
+                    exclusiveMinimum: true   # ← Boolean in 3.0!
+                    maximum: 100
+                  os:
+                    type: string
+                    example: fedora   # ← Singular; 3.1 uses examples array
+
+  # 3.0 LIMITATION: callbacks for webhook-like behavior (awkward)
+  /orders:
+    post:
+      summary: Create order
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Order'
+      responses:
+        '201':
+          description: Created
+      callbacks:
+        orderShipped:
+          '{$request.body#/webhookUrl}':
+            post:
+              summary: Webhook - order shipped
+              responses:
+                '200':
+                  description: Acknowledged
+              requestBody:
+                content:
+                  application/json:
+                    schema:
+                      $ref: '#/components/schemas/ShipmentEvent'
+
+  # 3.0 file upload: format-based
+  /upload:
+    post:
+      summary: Upload file
+      requestBody:
+        content:
+          application/octet-stream:
+            schema:
+              type: string
+              format: binary   # ← 3.1 uses contentEncoding/contentMediaType
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Uploaded
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        email:
+          type: string
+          nullable: true
+    Order:
+      type: object
+      properties:
+        productId:
+          type: integer
+        webhookUrl:
+          type: string
+    ShipmentEvent:
+      type: object
+      properties:
+        orderId:
+          type: integer
+        status:
+          type: string
